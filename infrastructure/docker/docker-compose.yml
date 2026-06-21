@@ -1,0 +1,87 @@
+version: "3.9"
+
+services:
+  # Frontend
+  aura-web:
+    build: 
+      context: ../../frontend
+      dockerfile: Dockerfile
+    ports: 
+      - "3000:3000"
+    depends_on: 
+      - aura-api-gateway
+    networks:
+      - aura-network
+
+  # API Gateway
+  aura-api-gateway:
+    build: 
+      context: ../../backend/aura-api-gateway
+      dockerfile: Dockerfile
+    ports: 
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - REDIS_HOST=redis
+      - POSTGRES_HOST=postgres
+    depends_on: 
+      - postgres
+      - redis
+    networks:
+      - aura-network
+
+  # Agent Core
+  aura-agent-core:
+    build: 
+      context: ../../backend/aura-agent-core
+      dockerfile: Dockerfile
+    ports: 
+      - "8083:8083"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - DB_URL=jdbc:postgresql://postgres:5432/aura_db
+      - DB_USER=aura
+      - DB_PASSWORD=${DB_PASSWORD}
+      - VECTOR_DB_URL=http://vector-db:8000
+    depends_on: 
+      - postgres
+      - vector-db
+      - aura-api-gateway
+    networks:
+      - aura-network
+
+  # Databases
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: aura_db
+      POSTGRES_USER: aura
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes: 
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - aura-network
+
+  redis:
+    image: redis:7-alpine
+    ports: 
+      - "6379:6379"
+    networks:
+      - aura-network
+
+  vector-db:
+    image: chromadb/chroma:latest
+    ports: 
+      - "8000:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    networks:
+      - aura-network
+
+volumes:
+  postgres_data:
+  chroma_data:
+
+networks:
+  aura-network:
+    driver: bridge
