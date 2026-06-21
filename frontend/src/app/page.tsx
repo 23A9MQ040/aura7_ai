@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowRight, Brain, Shield, Sparkles, Zap, Globe, Database, ChevronRight, Github } from 'lucide-react';
+import { ArrowRight, Brain, Shield, Sparkles, Zap, Globe, Database, ChevronRight, Code2 } from 'lucide-react';
 import { agents } from '@/lib/data';
 import { StaggerContainer, StaggerItem } from '@/components/ui/Animations';
 
@@ -341,7 +341,7 @@ export default function LandingPage() {
               Launch AURA <ArrowRight className="w-5 h-5" />
             </Link>
             <a href="https://github.com/23A9MQ040/aura7_ai" target="_blank" className="btn-ghost flex items-center gap-2 text-lg !px-8 !py-3.5">
-              <Github className="w-5 h-5" /> GitHub
+              <Code2 className="w-5 h-5" /> GitHub
             </a>
           </div>
         </motion.div>
