@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Search, Trash2, Download, Edit3, Clock, Tag, AlertCircle, Star, Filter } from 'lucide-react';
-import { memoryItems } from '@/lib/data';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, Trash2, Download, Edit3, Clock, Tag, AlertCircle, Star, Plus, X } from 'lucide-react';
+import { memoryItems as initialMemoryItems } from '@/lib/data';
 import PageTransition, { StaggerContainer, StaggerItem, GlowCard } from '@/components/ui/Animations';
 
 const categoryColors: Record<string, { bg: string; text: string; label: string }> = {
@@ -20,21 +20,68 @@ const importanceColors: Record<string, string> = {
 };
 
 export default function MemoryPage() {
+  const [memories, setMemories] = useState(initialMemoryItems);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  
+  // Form State
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [category, setCategory] = useState('preference');
+  const [importance, setImportance] = useState('medium');
 
-  const filtered = memoryItems.filter((m) => {
+  const filtered = memories.filter((m) => {
     const matchSearch = m.title.toLowerCase().includes(search.toLowerCase()) || m.content.toLowerCase().includes(search.toLowerCase());
     const matchCat = activeCategory === 'all' || m.category === activeCategory;
     return matchSearch && matchCat;
   });
 
   const stats = {
-    total: memoryItems.length,
-    goals: memoryItems.filter(m => m.category === 'goal').length,
-    preferences: memoryItems.filter(m => m.category === 'preference').length,
-    learning: memoryItems.filter(m => m.category === 'learning').length,
-    behavior: memoryItems.filter(m => m.category === 'behavior').length,
+    total: memories.length,
+    goals: memories.filter(m => m.category === 'goal').length,
+    preferences: memories.filter(m => m.category === 'preference').length,
+    learning: memories.filter(m => m.category === 'learning').length,
+    behavior: memories.filter(m => m.category === 'behavior').length,
+  };
+
+  const handleAddMemory = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim() || !content.trim()) return;
+
+    const newMemory = {
+      id: Math.random().toString(36).substr(2, 9),
+      title,
+      content,
+      category: category as 'goal' | 'preference' | 'learning' | 'behavior',
+      importance: importance as 'high' | 'medium' | 'low',
+      timestamp: 'Just now',
+    };
+
+    setMemories([newMemory, ...memories]);
+    setTitle('');
+    setContent('');
+    setShowAddForm(false);
+  };
+
+  const handleDelete = (id: string) => {
+    setMemories(prev => prev.filter(m => m.id !== id));
+  };
+
+  const handleClearAll = () => {
+    if (window.confirm('Are you sure you want to permanently clear all memories? This cannot be undone.')) {
+      setMemories([]);
+    }
+  };
+
+  const handleExport = () => {
+    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(memories, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute('href', dataStr);
+    downloadAnchor.setAttribute('download', 'aura_memories.json');
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
   };
 
   return (
@@ -47,10 +94,10 @@ export default function MemoryPage() {
             <p className="text-aura-muted">Manage what AURA remembers about you. Full control over your AI memory.</p>
           </div>
           <div className="flex gap-3">
-            <button className="btn-secondary text-sm flex items-center gap-2">
+            <button onClick={handleExport} className="btn-secondary text-sm flex items-center gap-2">
               <Download className="w-4 h-4" /> Export All
             </button>
-            <button className="btn-ghost text-sm flex items-center gap-2 !border-aura-red/30 !text-aura-red hover:!bg-aura-red/10">
+            <button onClick={handleClearAll} className="btn-ghost text-sm flex items-center gap-2 !border-aura-red/30 !text-aura-red hover:!bg-aura-red/10">
               <Trash2 className="w-4 h-4" /> Clear All
             </button>
           </div>
@@ -73,7 +120,7 @@ export default function MemoryPage() {
           ))}
         </div>
 
-        {/* Search & Filters */}
+        {/* Search & Filters & Add Button */}
         <div className="flex flex-col md:flex-row gap-3">
           <div className="glass rounded-xl px-4 py-2.5 flex items-center gap-2 flex-1">
             <Search className="w-4 h-4 text-aura-muted" />
@@ -85,7 +132,7 @@ export default function MemoryPage() {
               className="bg-transparent border-none outline-none text-sm flex-1 text-aura-text placeholder-aura-muted"
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
             {['all', 'goal', 'preference', 'learning', 'behavior'].map((cat) => (
               <button
                 key={cat}
@@ -99,13 +146,99 @@ export default function MemoryPage() {
                 {cat}
               </button>
             ))}
+            <button
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="btn-primary text-xs !py-2 !px-3 flex items-center gap-1.5 ml-auto md:ml-0"
+            >
+              <Plus className="w-3.5 h-3.5" /> Add Memory
+            </button>
           </div>
         </div>
+
+        {/* Add Memory Form */}
+        <AnimatePresence>
+          {showAddForm && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <form onSubmit={handleAddMemory} className="glass-card p-6 space-y-4">
+                <div className="flex justify-between items-center pb-2 border-b border-white/5">
+                  <h3 className="text-sm font-semibold">Store New Memory</h3>
+                  <button type="button" onClick={() => setShowAddForm(false)} className="text-aura-muted hover:text-aura-text">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-aura-muted">Title / Context</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Preferred Coding Style"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-aura-text focus:border-aura-cyan/50 outline-none transition-colors"
+                      required
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs text-aura-muted">Category</label>
+                      <select
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                        className="w-full bg-neutral-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-aura-text outline-none focus:border-aura-cyan/50"
+                      >
+                        <option value="preference">Preference</option>
+                        <option value="goal">Goal</option>
+                        <option value="learning">Learning</option>
+                        <option value="behavior">Behavior</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs text-aura-muted">Importance</label>
+                      <select
+                        value={importance}
+                        onChange={(e) => setImportance(e.target.value)}
+                        className="w-full bg-neutral-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-aura-text outline-none focus:border-aura-cyan/50"
+                      >
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs text-aura-muted">Memory Details</label>
+                  <textarea
+                    placeholder="Describe what AURA should remember..."
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    rows={3}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-aura-text focus:border-aura-cyan/50 outline-none transition-colors resize-none"
+                    required
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <button type="button" onClick={() => setShowAddForm(false)} className="btn-secondary text-xs !py-2 !px-4">
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn-primary text-xs !py-2 !px-4">
+                    Save Memory
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Memory Timeline */}
         <StaggerContainer className="space-y-4">
           {filtered.map((memory) => {
-            const cat = categoryColors[memory.category];
+            const cat = categoryColors[memory.category] || { bg: 'bg-white/5', text: 'text-aura-muted', label: memory.category };
             return (
               <StaggerItem key={memory.id}>
                 <GlowCard color={memory.category === 'goal' ? 'cyan' : memory.category === 'preference' ? 'purple' : memory.category === 'learning' ? 'green' : 'orange'}>
@@ -129,10 +262,7 @@ export default function MemoryPage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-1">
-                          <button className="p-1.5 rounded-lg hover:bg-white/5 text-aura-muted hover:text-aura-text transition-colors">
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </button>
-                          <button className="p-1.5 rounded-lg hover:bg-aura-red/10 text-aura-muted hover:text-aura-red transition-colors">
+                          <button onClick={() => handleDelete(memory.id)} className="p-1.5 rounded-lg hover:bg-aura-red/10 text-aura-muted hover:text-aura-red transition-colors">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>

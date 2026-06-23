@@ -32,6 +32,8 @@ interface BackendStatus {
   [key: string]: string | number | boolean | undefined;
 }
 
+import Link from 'next/link';
+
 export default function DashboardPage() {
   const [backendStatus, setBackendStatus] = useState<BackendStatus | null>(null);
 
@@ -60,14 +62,14 @@ export default function DashboardPage() {
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-aura-cyan/20 to-aura-purple/20 flex items-center justify-center flex-shrink-0">
             <Target className="w-6 h-6 text-aura-cyan" />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 text-left">
             <p className="text-sm font-semibold">AURA Insight</p>
             <p className="text-sm text-aura-muted">
               Your Agentic AI Engineer roadmap is <span className="text-aura-cyan font-semibold">78% complete</span>.
               Career Agent detected 3 new relevant job postings. Learning Agent suggests focusing on Multi-Agent Systems this week.
             </p>
           </div>
-          <button className="btn-primary text-xs !py-2 !px-4 flex-shrink-0 whitespace-nowrap">View Details</button>
+          <Link href="/learning" className="btn-primary text-xs !py-2 !px-4 flex-shrink-0 whitespace-nowrap">View Details</Link>
         </motion.div>
 
         {/* Metrics Grid */}
@@ -104,35 +106,40 @@ export default function DashboardPage() {
             <StaggerContainer className="grid md:grid-cols-2 gap-4">
               {agents.map((agent) => (
                 <StaggerItem key={agent.id}>
-                  <GlowCard color={agent.color === '#00f0ff' ? 'cyan' : agent.color === '#a855f7' ? 'purple' : agent.color === '#10b981' ? 'green' : agent.color === '#3b82f6' ? 'blue' : agent.color === '#ec4899' ? 'pink' : 'orange'}>
-                    <div className="flex items-start gap-4">
-                      <ProgressRing progress={agent.accuracy || 0} size={56} strokeWidth={4} color={agent.color}>
-                        <span className="text-sm">{agent.icon}</span>
-                      </ProgressRing>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <h3 className="font-semibold text-sm">{agent.name}</h3>
-                          <div className="flex items-center gap-1.5">
-                            <span className={`status-dot ${statusColorMap[agent.status]}`} />
-                            <span className="text-[10px] uppercase font-mono text-aura-muted">{agent.status}</span>
+                  <Link href={`/agents?select=${agent.id}`} className="block">
+                    <GlowCard 
+                      color={agent.color === '#00f0ff' ? 'cyan' : agent.color === '#a855f7' ? 'purple' : agent.color === '#10b981' ? 'green' : agent.color === '#3b82f6' ? 'blue' : agent.color === '#ec4899' ? 'pink' : 'orange'}
+                      className="cursor-pointer hover:scale-[1.02] transition-transform duration-200"
+                    >
+                      <div className="flex items-start gap-4">
+                        <ProgressRing progress={agent.accuracy || 0} size={56} strokeWidth={4} color={agent.color}>
+                          <span className="text-sm">{agent.icon}</span>
+                        </ProgressRing>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1">
+                            <h3 className="font-semibold text-sm">{agent.name}</h3>
+                            <div className="flex items-center gap-1.5">
+                              <span className={`status-dot ${statusColorMap[agent.status]}`} />
+                              <span className="text-[10px] uppercase font-mono text-aura-muted">{agent.status}</span>
+                            </div>
                           </div>
-                        </div>
-                        <p className="text-xs text-aura-muted mb-2 truncate">{agent.lastAction}</p>
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
-                            <motion.div
-                              className="h-full rounded-full"
-                              style={{ background: agent.color }}
-                              initial={{ width: 0 }}
-                              animate={{ width: `${agent.accuracy}%` }}
-                              transition={{ duration: 1, delay: 0.2 }}
-                            />
+                          <p className="text-xs text-aura-muted mb-2 truncate">{agent.lastAction}</p>
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
+                              <motion.div
+                                className="h-full rounded-full"
+                                style={{ background: agent.color }}
+                                initial={{ width: 0 }}
+                                animate={{ width: `${agent.accuracy}%` }}
+                                transition={{ duration: 1, delay: 0.2 }}
+                              />
+                            </div>
+                            <span className="text-[10px] font-mono text-aura-muted">{agent.accuracy}%</span>
                           </div>
-                          <span className="text-[10px] font-mono text-aura-muted">{agent.accuracy}%</span>
                         </div>
                       </div>
-                    </div>
-                  </GlowCard>
+                    </GlowCard>
+                  </Link>
                 </StaggerItem>
               ))}
             </StaggerContainer>

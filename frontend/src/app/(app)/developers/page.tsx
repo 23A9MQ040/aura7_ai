@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Code2, Key, Copy, Check, Zap, Lock, Clock, BookOpen, ArrowRight, Terminal, Webhook } from 'lucide-react';
+import { Code2, Key, Copy, Check, Zap, Lock, Clock, BookOpen, ArrowRight, Terminal, Webhook, RotateCw } from 'lucide-react';
 import PageTransition, { StaggerContainer, StaggerItem, GlowCard } from '@/components/ui/Animations';
 import { apiEndpoints } from '@/lib/data';
 
@@ -75,11 +75,34 @@ HttpResponse<String> response = client.send(
 export default function DevelopersPage() {
   const [activeTab, setActiveTab] = useState('curl');
   const [copied, setCopied] = useState(false);
+  const [apiKey, setApiKey] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
+  const [copiedKey, setCopiedKey] = useState(false);
+
+  const generateKey = () => {
+    setGenerating(true);
+    setTimeout(() => {
+      const array = new Uint8Array(24);
+      window.crypto.getRandomValues(array);
+      const hex = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+      setApiKey(`aura_sk_live_${hex.substring(0, 32)}`);
+      setGenerating(false);
+    }, 1500);
+  };
+
+  const currentCode = codeExamples[activeTab].replace('YOUR_API_KEY', apiKey || 'YOUR_API_KEY');
 
   const copyCode = () => {
-    navigator.clipboard.writeText(codeExamples[activeTab]);
+    navigator.clipboard.writeText(currentCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const copyKey = () => {
+    if (!apiKey) return;
+    navigator.clipboard.writeText(apiKey);
+    setCopiedKey(true);
+    setTimeout(() => setCopiedKey(false), 2000);
   };
 
   return (
@@ -124,13 +147,35 @@ export default function DevelopersPage() {
           <div className="glass rounded-xl p-4 font-mono text-sm">
             <span className="text-aura-muted">Authorization:</span>{' '}
             <span className="text-aura-cyan">Bearer</span>{' '}
-            <span className="text-aura-purple">YOUR_API_KEY</span>
+            <span className="text-aura-purple font-bold">{apiKey || 'YOUR_API_KEY'}</span>
           </div>
           <div className="mt-4 flex items-center gap-3">
-            <div className="glass rounded-xl px-4 py-2.5 flex-1 font-mono text-xs text-aura-muted">
-              aura_sk_••••••••••••••••••••••••••••••
+            <div className="glass rounded-xl px-4 py-2.5 flex-1 font-mono text-xs text-aura-muted overflow-hidden truncate">
+              {apiKey ? apiKey : 'aura_sk_••••••••••••••••••••••••••••••'}
             </div>
-            <button className="btn-primary text-sm">Generate Key</button>
+            {apiKey && (
+              <button 
+                onClick={copyKey}
+                className="btn-secondary text-sm !px-3"
+                title="Copy API Key"
+              >
+                {copiedKey ? <Check className="w-4 h-4 text-aura-green" /> : <Copy className="w-4 h-4" />}
+              </button>
+            )}
+            <button 
+              onClick={generateKey} 
+              disabled={generating}
+              className="btn-primary text-sm flex items-center gap-2 disabled:opacity-50 min-w-[140px] justify-center"
+            >
+              {generating ? (
+                <>
+                  <RotateCw className="w-4 h-4 animate-spin text-aura-bg" />
+                  Generating...
+                </>
+              ) : (
+                apiKey ? 'Regenerate Key' : 'Generate Key'
+              )}
+            </button>
           </div>
         </div>
 
@@ -159,7 +204,7 @@ export default function DevelopersPage() {
           </div>
           <div className="relative">
             <pre className="p-6 overflow-x-auto text-sm font-mono text-aura-text/80 leading-relaxed">
-              {codeExamples[activeTab]}
+              {currentCode}
             </pre>
             <button
               onClick={copyCode}

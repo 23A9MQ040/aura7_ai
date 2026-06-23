@@ -33,6 +33,13 @@ export default function AgentsPage() {
   const [agents, setAgents] = useState<Agent[]>(defaultAgents);
 
   useEffect(() => {
+    // Parse query params to auto-open specific agent from dashboard
+    const params = new URLSearchParams(window.location.search);
+    const select = params.get('select');
+    if (select) {
+      setSelectedAgent(select);
+    }
+
     fetch('http://localhost:8080/api/agents')
       .then(res => res.json())
       .then(data => {

@@ -1,16 +1,17 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, CheckCircle2, Circle, Clock, Flame, Trophy, ArrowRight, Play, Star } from 'lucide-react';
+import { BookOpen, CheckCircle2, Circle, Clock, Flame, Trophy, ArrowRight, Star } from 'lucide-react';
 import PageTransition, { StaggerContainer, StaggerItem, GlowCard, ProgressRing } from '@/components/ui/Animations';
-import { learningRoadmap } from '@/lib/data';
+import { learningRoadmap as initialLearningRoadmap } from '@/lib/data';
 
-const dailyTasks = [
-  { title: 'Read: Multi-Agent Orchestration Patterns', duration: '25 min', type: 'reading', done: true },
-  { title: 'Build: Simple Agent Router in TypeScript', duration: '45 min', type: 'project', done: true },
-  { title: 'Watch: LangGraph Deep Dive', duration: '30 min', type: 'video', done: false },
-  { title: 'Practice: Agent Communication Protocol', duration: '20 min', type: 'exercise', done: false },
-  { title: 'Review: Yesterday\'s Code Submission', duration: '15 min', type: 'review', done: false },
+const initialDailyTasks = [
+  { id: '1', title: 'Read: Multi-Agent Orchestration Patterns', duration: '25 min', type: 'reading', done: true },
+  { id: '2', title: 'Build: Simple Agent Router in TypeScript', duration: '45 min', type: 'project', done: true },
+  { id: '3', title: 'Watch: LangGraph Deep Dive', duration: '30 min', type: 'video', done: false },
+  { id: '4', title: 'Practice: Agent Communication Protocol', duration: '20 min', type: 'exercise', done: false },
+  { id: '5', title: 'Review: Yesterday\'s Code Submission', duration: '15 min', type: 'review', done: false },
 ];
 
 const resources = [
@@ -27,8 +28,46 @@ const statusColors = {
 };
 
 export default function LearningPage() {
-  const totalModules = learningRoadmap.reduce((a, n) => a + n.modules.length, 0);
-  const doneModules = learningRoadmap.reduce((a, n) => a + n.modules.filter(m => m.done).length, 0);
+  const [dailyTasks, setDailyTasks] = useState(initialDailyTasks);
+  const [roadmap, setRoadmap] = useState(initialLearningRoadmap);
+  const [streak, setStreak] = useState(12);
+
+  const toggleDailyTask = (id: string) => {
+    setDailyTasks(prev => prev.map(t => {
+      if (t.id === id) {
+        return { ...t, done: !t.done };
+      }
+      return t;
+    }));
+  };
+
+  const toggleModule = (nodeId: string, moduleName: string) => {
+    setRoadmap(prev => prev.map(node => {
+      if (node.id === nodeId) {
+        const nextModules = node.modules.map(mod => 
+          mod.name === moduleName ? { ...mod, done: !mod.done } : mod
+        );
+        const doneCount = nextModules.filter(m => m.done).length;
+        const progress = Math.round((doneCount / nextModules.length) * 100);
+        let status = 'upcoming';
+        if (progress === 100) {
+          status = 'completed';
+        } else if (progress > 0) {
+          status = 'in-progress';
+        }
+        return {
+          ...node,
+          modules: nextModules,
+          progress,
+          status: status as 'completed' | 'in-progress' | 'upcoming',
+        };
+      }
+      return node;
+    }));
+  };
+
+  const totalModules = roadmap.reduce((a, n) => a + n.modules.length, 0);
+  const doneModules = roadmap.reduce((a, n) => a + n.modules.filter(m => m.done).length, 0);
   const overallProgress = Math.round((doneModules / totalModules) * 100);
 
   return (
@@ -44,10 +83,14 @@ export default function LearningPage() {
             <p className="text-aura-muted">Your personalized AI-powered learning journey.</p>
           </div>
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 glass rounded-xl px-4 py-2">
-              <Flame className="w-4 h-4 text-aura-orange" />
-              <span className="text-sm font-semibold text-aura-orange">12 day streak</span>
-            </div>
+            <button 
+              onClick={() => setStreak(prev => prev + 1)}
+              className="flex items-center gap-2 glass rounded-xl px-4 py-2 hover:bg-white/5 transition-all text-left"
+              title="Practice today to build your streak!"
+            >
+              <Flame className="w-4 h-4 text-aura-orange animate-pulse" />
+              <span className="text-sm font-semibold text-aura-orange">{streak} day streak</span>
+            </button>
             <div className="flex items-center gap-2 glass rounded-xl px-4 py-2">
               <Trophy className="w-4 h-4 text-aura-yellow" />
               <span className="text-sm font-semibold text-aura-yellow">Level 7</span>
@@ -64,18 +107,17 @@ export default function LearningPage() {
                 <p className="text-[8px] text-aura-muted">Complete</p>
               </div>
             </ProgressRing>
-            <div className="flex-1">
+            <div className="flex-1 w-full">
               <h2 className="text-xl font-bold mb-1">Agentic AI Engineer Roadmap</h2>
               <p className="text-sm text-aura-muted mb-3">
                 Your personalized path to becoming an Agentic AI Engineer.{' '}
-                <span className="text-aura-cyan">{doneModules}/{totalModules} modules</span> completed.
+                <span className="text-aura-cyan font-mono font-bold">{doneModules}/{totalModules} modules</span> completed.
               </p>
               <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
                 <motion.div
                   className="h-full rounded-full bg-gradient-to-r from-aura-cyan via-aura-blue to-aura-purple"
-                  initial={{ width: 0 }}
                   animate={{ width: `${overallProgress}%` }}
-                  transition={{ duration: 1.5 }}
+                  transition={{ duration: 0.5 }}
                 />
               </div>
             </div>
@@ -87,8 +129,8 @@ export default function LearningPage() {
           <div className="lg:col-span-2">
             <h2 className="text-lg font-semibold mb-4">Learning Roadmap</h2>
             <div className="space-y-4">
-              {learningRoadmap.map((node, i) => {
-                const style = statusColors[node.status];
+              {roadmap.map((node, i) => {
+                const style = statusColors[node.status] || statusColors['upcoming'];
                 return (
                   <motion.div
                     key={node.id}
@@ -103,10 +145,10 @@ export default function LearningPage() {
                         <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: `${style.dot}20`, color: style.dot }}>
                           {node.status === 'completed' ? '✓' : i + 1}
                         </div>
-                        {i < learningRoadmap.length - 1 && <div className="w-px h-8 bg-aura-border/30" />}
+                        {i < roadmap.length - 1 && <div className="w-px h-8 bg-aura-border/30" />}
                       </div>
 
-                      <div className="flex-1">
+                      <div className="flex-1 w-full">
                         <div className="flex items-center justify-between mb-2">
                           <h3 className="font-semibold">{node.title}</h3>
                           <span className={`text-[10px] px-2.5 py-1 rounded-full ${style.bg} ${style.text} uppercase font-mono`}>
@@ -120,26 +162,28 @@ export default function LearningPage() {
                             <motion.div
                               className="h-full rounded-full"
                               style={{ background: style.dot }}
-                              initial={{ width: 0 }}
-                              whileInView={{ width: `${node.progress}%` }}
-                              viewport={{ once: true }}
-                              transition={{ duration: 1 }}
+                              animate={{ width: `${node.progress}%` }}
+                              transition={{ duration: 0.5 }}
                             />
                           </div>
                           <span className="text-xs font-mono" style={{ color: style.dot }}>{node.progress}%</span>
                         </div>
 
                         {/* Modules */}
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                           {node.modules.map((mod) => (
-                            <div key={mod.name} className="flex items-center gap-2 text-xs">
+                            <button
+                              key={mod.name}
+                              onClick={() => toggleModule(node.id, mod.name)}
+                              className="flex items-center gap-2 text-xs text-left p-1.5 rounded hover:bg-white/5 transition-all outline-none"
+                            >
                               {mod.done ? (
-                                <CheckCircle2 className="w-3.5 h-3.5 text-aura-green flex-shrink-0" />
+                                <CheckCircle2 className="w-4 h-4 text-aura-green flex-shrink-0" />
                               ) : (
-                                <Circle className="w-3.5 h-3.5 text-aura-muted/40 flex-shrink-0" />
+                                <Circle className="w-4 h-4 text-aura-muted/40 flex-shrink-0" />
                               )}
                               <span className={mod.done ? 'text-aura-muted line-through' : 'text-aura-text'}>{mod.name}</span>
-                            </div>
+                            </button>
                           ))}
                         </div>
                       </div>
@@ -161,11 +205,12 @@ export default function LearningPage() {
               <div className="glass-card p-4 space-y-2">
                 {dailyTasks.map((task, i) => (
                   <motion.div
-                    key={task.title}
+                    key={task.id}
                     initial={{ opacity: 0, x: 10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.08 }}
-                    className={`flex items-start gap-3 p-3 rounded-xl transition-colors ${task.done ? 'opacity-60' : 'hover:bg-white/3'}`}
+                    onClick={() => toggleDailyTask(task.id)}
+                    className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors ${task.done ? 'opacity-60 bg-white/[0.01]' : 'hover:bg-white/3'}`}
                   >
                     {task.done ? (
                       <CheckCircle2 className="w-4 h-4 text-aura-green flex-shrink-0 mt-0.5" />
