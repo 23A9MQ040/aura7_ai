@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useMemo } from 'react';
+import { useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -8,7 +8,7 @@ function NeuralParticles() {
   const meshRef = useRef<THREE.Points>(null);
   const linesRef = useRef<THREE.LineSegments>(null);
 
-  const { positions, colors, linePositions, lineColors } = useMemo(() => {
+  const [{ positions, colors, linePositions, lineColors }] = useState(() => {
     const count = 200;
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
@@ -61,7 +61,7 @@ function NeuralParticles() {
       linePositions: new Float32Array(linePos),
       lineColors: new Float32Array(lineCol),
     };
-  }, []);
+  });
 
   useFrame(({ clock }) => {
     if (meshRef.current) {
