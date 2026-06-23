@@ -16,8 +16,8 @@ services:
   # API Gateway
   aura-api-gateway:
     build: 
-      context: ../../backend/aura-api-gateway
-      dockerfile: Dockerfile
+      context: ../../backend
+      dockerfile: aura-api-gateway/Dockerfile
     ports: 
       - "8080:8080"
     environment:
@@ -33,8 +33,8 @@ services:
   # Agent Core
   aura-agent-core:
     build: 
-      context: ../../backend/aura-agent-core
-      dockerfile: Dockerfile
+      context: ../../backend
+      dockerfile: aura-agent-core/Dockerfile
     ports: 
       - "8083:8083"
     environment:
@@ -51,6 +51,70 @@ services:
       - aura-network
 
   # Databases
+
+  # Scaffolding additional microservices
+  aura-auth-service:
+    build: 
+      context: ../../backend
+      dockerfile: aura-auth-service/Dockerfile
+    ports: 
+      - "8081:8080"
+    networks:
+      - aura-network
+
+  aura-user-service:
+    build: 
+      context: ../../backend
+      dockerfile: aura-user-service/Dockerfile
+    ports: 
+      - "8082:8080"
+    networks:
+      - aura-network
+
+  aura-memory-service:
+    build: 
+      context: ../../backend
+      dockerfile: aura-memory-service/Dockerfile
+    ports: 
+      - "8084:8080"
+    networks:
+      - aura-network
+
+  aura-learning-agent:
+    build: 
+      context: ../../backend
+      dockerfile: aura-learning-agent/Dockerfile
+    ports: 
+      - "8085:8080"
+    networks:
+      - aura-network
+
+  aura-career-agent:
+    build: 
+      context: ../../backend
+      dockerfile: aura-career-agent/Dockerfile
+    ports: 
+      - "8086:8080"
+    networks:
+      - aura-network
+
+  aura-privacy-service:
+    build: 
+      context: ../../backend
+      dockerfile: aura-privacy-service/Dockerfile
+    ports: 
+      - "8087:8080"
+    networks:
+      - aura-network
+
+  aura-notification-service:
+    build: 
+      context: ../../backend
+      dockerfile: aura-notification-service/Dockerfile
+    ports: 
+      - "8088:8080"
+    networks:
+      - aura-network
   postgres:
     image: postgres:16-alpine
     environment:
@@ -85,3 +149,4 @@ volumes:
 networks:
   aura-network:
     driver: bridge
+

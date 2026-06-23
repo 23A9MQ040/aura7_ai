@@ -1,0 +1,17 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'aura-services'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: 
+        - 'aura-api-gateway:8080'
+        - 'aura-agent-core:8083'
+        - 'aura-auth-service:8081'
+        - 'aura-user-service:8082'
+        - 'aura-memory-service:8084'
+        - 'aura-learning-agent:8085'
+        - 'aura-career-agent:8086'
+        - 'aura-privacy-service:8087'
+        - 'aura-notification-service:8088'

@@ -24,7 +24,18 @@ const changeIcons = {
   neutral: <Minus className="w-3.5 h-3.5 text-aura-muted" />,
 };
 
+import { useState, useEffect } from 'react';
+
 export default function DashboardPage() {
+  const [backendStatus, setBackendStatus] = useState<any>(null);
+
+  useEffect(() => {
+    fetch('http://localhost:8080/api/status')
+      .then(res => res.json())
+      .then(data => setBackendStatus(data))
+      .catch(err => setBackendStatus({ status: 'offline', message: 'Cannot connect to backend' }));
+  }, []);
+
   return (
     <PageTransition>
       <div className="space-y-8">
@@ -189,6 +200,24 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* Backend Connection Status */}
+        <div className="glass-card p-5">
+          <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
+            <div className={`status-dot ${backendStatus?.status === 'operational' ? 'status-active' : 'bg-red-500'}`} />
+            Backend Connection Status
+          </h2>
+          <div className="text-sm">
+            {backendStatus ? (
+              <pre className="text-aura-muted bg-black/20 p-4 rounded-lg overflow-x-auto">
+                {JSON.stringify(backendStatus, null, 2)}
+              </pre>
+            ) : (
+              <p className="text-aura-muted">Pinging backend at localhost:8080...</p>
+            )}
+          </div>
+        </div>
+
       </div>
     </PageTransition>
   );

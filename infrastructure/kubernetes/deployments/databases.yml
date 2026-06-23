@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: aura-postgres
+  namespace: aura
+spec:
+  serviceName: "aura-postgres"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aura-postgres
+  template:
+    metadata:
+      labels:
+        app: aura-postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        ports:
+        - containerPort: 5432
+        envFrom:
+        - configMapRef:
+            name: aura-config
+        env:
+        - name: POSTGRES_DB
+          value: "aura_db"
+        - name: POSTGRES_USER
+          valueFrom:
+            configMapKeyRef:
+              name: aura-config
+              key: DB_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: aura-secrets
+              key: DB_PASSWORD
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aura-redis
+  namespace: aura
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aura-redis
+  template:
+    metadata:
+      labels:
+        app: aura-redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: aura-vector-db
+  namespace: aura
+spec:
+  serviceName: "aura-vector-db"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aura-vector-db
+  template:
+    metadata:
+      labels:
+        app: aura-vector-db
+    spec:
+      containers:
+      - name: vector-db
+        image: chromadb/chroma:latest
+        ports:
+        - containerPort: 8000
+        volumeMounts:
+        - name: chroma-data
+          mountPath: /chroma/chroma
+  volumeClaimTemplates:
+  - metadata:
+      name: chroma-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 10Gi

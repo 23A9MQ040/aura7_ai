@@ -1,0 +1,70 @@
+# Database Services
+apiVersion: v1
+kind: Service
+metadata:
+  name: aura-postgres
+  namespace: aura
+spec:
+  ports:
+  - port: 5432
+  selector:
+    app: aura-postgres
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aura-redis
+  namespace: aura
+spec:
+  ports:
+  - port: 6379
+  selector:
+    app: aura-redis
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aura-vector-db
+  namespace: aura
+spec:
+  ports:
+  - port: 8000
+  selector:
+    app: aura-vector-db
+---
+# Application Services
+apiVersion: v1
+kind: Service
+metadata:
+  name: aura-api-gateway
+  namespace: aura
+spec:
+  ports:
+  - port: 8080
+    targetPort: 8080
+  selector:
+    app: aura-api-gateway
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aura-agent-core
+  namespace: aura
+spec:
+  ports:
+  - port: 8083
+    targetPort: 8083
+  selector:
+    app: aura-agent-core
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aura-web
+  namespace: aura
+spec:
+  ports:
+  - port: 3000
+    targetPort: 3000
+  selector:
+    app: aura-web
