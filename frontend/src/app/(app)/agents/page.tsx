@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, Zap, X, ChevronRight } from 'lucide-react';
-import { agents } from '@/lib/data';
+import { agents as defaultAgents, Agent } from '@/lib/data';
 import PageTransition, { StaggerContainer, StaggerItem, ProgressRing } from '@/components/ui/Animations';
 
 const categories = ['All', 'Intelligence', 'Career', 'Wellness', 'Finance', 'Impact', 'System', 'Security'];
@@ -21,6 +22,21 @@ export default function AgentsPage() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
+  const [agents, setAgents] = useState<Agent[]>(defaultAgents);
+
+  useEffect(() => {
+    fetch('http://localhost:8080/api/agents')
+      .then(res => res.json())
+      .then(data => {
+        // Merge backend dynamic data with frontend static data (icons, capabilities, etc.)
+        const mergedAgents = defaultAgents.map(def => {
+          const liveAgent = data.find((a: any) => a.id === def.id || a.name === def.name);
+          return liveAgent ? { ...def, ...liveAgent } : def;
+        });
+        setAgents(mergedAgents);
+      })
+      .catch(err => console.log('Failed to fetch live agents, using default data'));
+  }, []);
 
   const filtered = agents.filter((a) => {
     const matchSearch = a.name.toLowerCase().includes(search.toLowerCase()) || a.description.toLowerCase().includes(search.toLowerCase());

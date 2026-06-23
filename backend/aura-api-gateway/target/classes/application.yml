@@ -1,0 +1,22 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: aura-api-gateway
+  cloud:
+    gateway:
+      mvc:
+        routes:
+          - id: aura-agent-core
+            uri: http://aura-agent-core:8083
+            predicates:
+              - Path=/api/agents/**
+            filters:
+              - StripPrefix=1
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
