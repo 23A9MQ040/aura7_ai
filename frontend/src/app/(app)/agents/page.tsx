@@ -7,6 +7,14 @@ import { Search, Filter, Zap, X, ChevronRight } from 'lucide-react';
 import { agents as defaultAgents, Agent } from '@/lib/data';
 import PageTransition, { StaggerContainer, StaggerItem, ProgressRing } from '@/components/ui/Animations';
 
+interface BackendAgent {
+  id?: string;
+  name?: string;
+  status?: string;
+  accuracy?: number;
+  lastAction?: string;
+}
+
 const categories = ['All', 'Intelligence', 'Career', 'Wellness', 'Finance', 'Impact', 'System', 'Security'];
 
 const statusStyles: Record<string, string> = {
@@ -30,7 +38,7 @@ export default function AgentsPage() {
       .then(data => {
         // Merge backend dynamic data with frontend static data (icons, capabilities, etc.)
         const mergedAgents = defaultAgents.map(def => {
-          const liveAgent = data.find((a: any) => a.id === def.id || a.name === def.name);
+          const liveAgent = data.find((a: BackendAgent) => a.id === def.id || a.name === def.name);
           return liveAgent ? { ...def, ...liveAgent } : def;
         });
         setAgents(mergedAgents);

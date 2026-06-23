@@ -26,8 +26,14 @@ const changeIcons = {
 
 import { useState, useEffect } from 'react';
 
+interface BackendStatus {
+  status: string;
+  message?: string;
+  [key: string]: string | number | boolean | undefined;
+}
+
 export default function DashboardPage() {
-  const [backendStatus, setBackendStatus] = useState<any>(null);
+  const [backendStatus, setBackendStatus] = useState<BackendStatus | null>(null);
 
   useEffect(() => {
     fetch('http://localhost:8080/api/status')
