@@ -20,6 +20,12 @@ spring:
               - Path=/api/users/**
             filters:
               - StripPrefix=1
+          - id: aura-auth-service
+            uri: http://aura-auth-service:8081
+            predicates:
+              - Path=/api/auth/**
+            filters:
+              - StripPrefix=1
       globalcors:
         cors-configurations:
           '[/**]':
